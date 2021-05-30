@@ -15,25 +15,33 @@
 syntax = "proto3";
 
 option java_multiple_files = true;
-option java_package = "io.grpc.examples.helloworld";
-option java_outer_classname = "HelloWorldProto";
+option java_package = "io.grpc.filters";
+option java_outer_classname = "FiltersProto";
 
-option go_package = "github.com/CodersSquad/final-dc/proto";
+option go_package = "github.com/jona9901/dc-final/proto";
 
 package proto;
 
 // The greeting service definition.
-service Greeter {
+service Filter {
   // Sends a greeting
-  rpc SayHello (HelloRequest) returns (HelloReply) {}
+  rpc ApplyFilter (FilterRequest) returns (FilterReply) {}
 }
 
-// The request message containing the user's name.
-message HelloRequest {
-  string name = 1;
+// The request message containing the .
+message FilterRequest {
+  string filter = 1;
+  string DownloadUrl = 2;
+  string UploadUrl = 3;
+  string ImageId = 4;
+  string WorkloadId = 5;
 }
 
 // The response message containing the greetings
-message HelloReply {
-  string message = 1;
+message FilterReply {
+  string filter = 1;
+  string DownloadUrl = 2;
+  string UploadUrl = 3;
+  string ImageId = 4;
+  string WorkloadId = 5;
 }
