@@ -23,7 +23,7 @@ var (
 
 // server is used to implement helloworld.GreeterServer.
 type server struct {
-	pb.UnimplementedGreeterServer
+	pb.UnimplementedFilterServer
 }
 
 var (
@@ -38,9 +38,9 @@ func die(format string, v ...interface{}) {
 }
 
 // SayHello implements helloworld.GreeterServer
-func (s *server) SayHello(ctx context.Context, in *pb.HelloRequest) (*pb.HelloReply, error) {
-	log.Printf("RPC: Received: %v", in.GetName())
-	return &pb.HelloReply{Message: "Hello " + in.GetName()}, nil
+func (s *server) ApplyFilter(ctx context.Context, in *pb.FilterRequest) (*pb.FilterReply, error) {
+	log.Printf("RPC: Received: %v", in.GetFilter())
+	return &pb.FilterReply{WorkloadID: "WorkloadID:  " + in.GetFilter()}, nil
 }
 
 func init() {
@@ -104,7 +104,7 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 	s := grpc.NewServer()
-	pb.RegisterGreeterServer(s, &server{})
+	pb.RegisterFilterServer(s, &server{})
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}

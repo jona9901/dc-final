@@ -23,7 +23,7 @@ func main() {
 	go controller.Start()
 
 	// Start Scheduler
-	go scheduler.Start(jobs)
+	go scheduler.Start(jobs, workloads)
 	// Send sample jobs
 	sampleJob := scheduler.Job{Address: "localhost:50051", RPCName: "hello"}
 

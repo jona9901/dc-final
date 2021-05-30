@@ -233,7 +233,7 @@ func workloads(c *gin.Context) {
 			workloadID := c.Request.FormValue("workload-id")
 			filter := c.Request.FormValue("filter")
 
-			workloadName := fmt.Sprintf("workload-" + strconv.Atoi(createdWorkloads))
+			workloadName := fmt.Sprintf("workload-" + strconv.Itoa(createdWorkloads))
 			createdWorkloads = createdWorkloads + 1
 
 			wkloadsBuff := scheduler.Workload{
@@ -241,8 +241,9 @@ func workloads(c *gin.Context) {
 				Filter: filter,
 				WorkloadName: workloadName,
 				Status: "scheduling",
-				Address: "localhost:50051",
 			}
+
+			wkloadsQ <- wkloadsBuff
 
 			message := fmt.Sprintf("Workload %s created successfuly", workloadName)
 
@@ -250,10 +251,9 @@ func workloads(c *gin.Context) {
 				"message": message,
 				"workload_id": workloadID,
 				"filter": filter,
-				"workloadName": worloadName,
+				"workloadName": workloadName,
 				"status": "scheduling",
 				"runing_jobs": 0,
-				"filtered_images", nil,
 			})
 			return
 		}
@@ -277,6 +277,7 @@ func Start(wkloads chan scheduler.Workload) {
 
 	server.MaxMultipartMemory = 8 << 20			// 8 MiB
 	server.POST("/upload", upload)
+	server.POST("/workloads", workloads)
 
 	server.Run()
 }
