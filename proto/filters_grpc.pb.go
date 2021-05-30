@@ -20,6 +20,7 @@ const _ = grpc.SupportPackageIsVersion7
 type FilterClient interface {
 	// Sends a greeting
 	ApplyFilter(ctx context.Context, in *FilterRequest, opts ...grpc.CallOption) (*FilterReply, error)
+	CreateWorkload(ctx context.Context, in *WorkloadRequest, opts ...grpc.CallOption) (*WorkloadReply, error)
 }
 
 type filterClient struct {
@@ -39,12 +40,22 @@ func (c *filterClient) ApplyFilter(ctx context.Context, in *FilterRequest, opts 
 	return out, nil
 }
 
+func (c *filterClient) CreateWorkload(ctx context.Context, in *WorkloadRequest, opts ...grpc.CallOption) (*WorkloadReply, error) {
+	out := new(WorkloadReply)
+	err := c.cc.Invoke(ctx, "/proto.Filter/CreateWorkload", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // FilterServer is the server API for Filter service.
 // All implementations must embed UnimplementedFilterServer
 // for forward compatibility
 type FilterServer interface {
 	// Sends a greeting
 	ApplyFilter(context.Context, *FilterRequest) (*FilterReply, error)
+	CreateWorkload(context.Context, *WorkloadRequest) (*WorkloadReply, error)
 	mustEmbedUnimplementedFilterServer()
 }
 
@@ -54,6 +65,9 @@ type UnimplementedFilterServer struct {
 
 func (UnimplementedFilterServer) ApplyFilter(context.Context, *FilterRequest) (*FilterReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ApplyFilter not implemented")
+}
+func (UnimplementedFilterServer) CreateWorkload(context.Context, *WorkloadRequest) (*WorkloadReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateWorkload not implemented")
 }
 func (UnimplementedFilterServer) mustEmbedUnimplementedFilterServer() {}
 
@@ -86,6 +100,24 @@ func _Filter_ApplyFilter_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Filter_CreateWorkload_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(WorkloadRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FilterServer).CreateWorkload(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.Filter/CreateWorkload",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FilterServer).CreateWorkload(ctx, req.(*WorkloadRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Filter_ServiceDesc is the grpc.ServiceDesc for Filter service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -97,7 +129,11 @@ var Filter_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "ApplyFilter",
 			Handler:    _Filter_ApplyFilter_Handler,
 		},
+		{
+			MethodName: "CreateWorkload",
+			Handler:    _Filter_CreateWorkload_Handler,
+		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "filters.proto",
+	Metadata: "proto/filters.proto",
 }

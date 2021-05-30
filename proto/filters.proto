@@ -26,22 +26,41 @@ package proto;
 service Filter {
   // Sends a greeting
   rpc ApplyFilter (FilterRequest) returns (FilterReply) {}
+  rpc CreateWorkload (WorkloadRequest) returns (WorkloadReply) {}
 }
 
 // The request message containing the .
 message FilterRequest {
-  string filter = 1;
-  string DownloadUrl = 2;
-  string UploadUrl = 3;
-  string ImageID = 4;
-  string WorkloadID = 5;
+  string Filter = 1;
+  string ImageID = 2;
+  string WorkloadID = 3;
 }
 
 // The response message containing the greetings
 message FilterReply {
-  string filter = 1;
-  string DownloadUrl = 2;
-  string UploadUrl = 3;
-  string ImageID = 4;
-  string WorkloadID = 5;
+  string Filter = 1;
+  string ImageID = 2;
+  string WorkloadID = 3;
+}
+
+// The request message containing the .
+message WorkloadRequest {
+  string WorkloadID = 1;
+  enum Filter {
+    GRAYSCALE = 0;
+    BLUE = 1;
+  }
+  string WorkloadName = 3;
+  enum Status {
+    SCHEDULING = 0;
+    RUNNING = 1;
+    COMPLETEd = 2;
+  }
+  uint32 running_jobs = 4;
+  repeated string FilteredImages = 5;
+}
+
+// The response message containing the greetings
+message WorkloadReply {
+  string Message = 1;
 }
