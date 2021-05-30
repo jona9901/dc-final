@@ -43,10 +43,10 @@ func schedule(job Job, workload Workload) {
 //	r, err := c.ApplyFilter(ctx, &pb.FilterRequest{WorkloadID: workloadID,})
     r, err := c.CreateWorkload(ctx, &pb.WorkloadRequest{
         WorkloadID: workload.WorkloadID,
-        Filter: 0,
+        Filter: workload.Filter,
         WorkloadName: workload.WorkloadName,
-        Status: 0,
-        running_jobs: 0,
+        Status: workload.Status,
+        Running_jobs: uint64(RunningJobs),
     })
 	if err != nil {
 		log.Fatalf("could not greet: %v", err)
