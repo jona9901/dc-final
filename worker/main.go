@@ -43,6 +43,12 @@ func (s *server) ApplyFilter(ctx context.Context, in *pb.FilterRequest) (*pb.Fil
 	return &pb.FilterReply{WorkloadID: "WorkloadID:  " + in.GetFilter()}, nil
 }
 
+// CreateWorkload implements filters.CreateWorkload
+func (s *server) CreateWorkload(ctx context.Context, in *pb.WorkloadRequest) (*pb.WorkloadReply, error) {
+	log.Printf("RPC: Creating workload with ID: %v", in.GetWorkloadID())
+	return &pb.WorkloadReply{Message: "Workload:  " + in.GetWorkloadName() + " scheduled."}, nil
+}
+
 func init() {
 	flag.StringVar(&controllerAddress, "controller", "tcp://localhost:40899", "Controller address")
 	flag.StringVar(&workerName, "worker-name", "hard-worker", "Worker Name")

@@ -40,11 +40,19 @@ func schedule(job Job, workload Workload) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
-	r, err := c.ApplyFilter(ctx, &pb.FilterRequest{Filter: workload.Filter})
+//	r, err := c.ApplyFilter(ctx, &pb.FilterRequest{WorkloadID: workloadID,})
+    r, err := c.CreateWorkload(ctx, &pb.WorkloadRequest{
+        WorkloadID: workload.WorkloadID,
+        Filter: 0,
+        WorkloadName: workload.WorkloadName,
+        Status: 0,
+        running_jobs: 0,
+    })
 	if err != nil {
 		log.Fatalf("could not greet: %v", err)
 	}
-	log.Printf("Scheduler: RPC respose from %s : %s", address, r.GetWorkloadID())
+//	log.Printf("Scheduler: RPC respose from %s : %s", address, r.GetWorkloadID())
+	log.Printf("Scheduler: RPC respose from %s : %s", address, r.GetMessage())
 }
 
 func Start(jobs chan Job, workloads chan Workload) error {

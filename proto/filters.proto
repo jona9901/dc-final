@@ -46,18 +46,11 @@ message FilterReply {
 // The request message containing the .
 message WorkloadRequest {
   string WorkloadID = 1;
-  enum Filter {
-    GRAYSCALE = 0;
-    BLUE = 1;
-  }
+  string Filter = 2;
   string WorkloadName = 3;
-  enum Status {
-    SCHEDULING = 0;
-    RUNNING = 1;
-    COMPLETEd = 2;
-  }
-  uint32 running_jobs = 4;
-  repeated string FilteredImages = 5;
+  string Status = 4;
+  uint64 Running_jobs = 5;
+  repeated string FilteredImages = 6;
 }
 
 // The response message containing the greetings

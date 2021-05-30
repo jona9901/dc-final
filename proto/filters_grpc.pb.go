@@ -135,5 +135,5 @@ var Filter_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "proto/filters.proto",
+	Metadata: "filters.proto",
 }
