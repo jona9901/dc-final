@@ -6,6 +6,7 @@ import (
 	"io"
 	"time"
 	"net/http"
+	"strconv"
 	"github.com/gin-gonic/gin"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/jona9901/dc-final/scheduler"
@@ -216,7 +217,7 @@ func status(c *gin.Context) {
 }
 
 // created workload counter
-var createdWorkloads := 0
+var createdWorkloads = 0
 
 // /workload enpoint. Creates a new Workload
 func workloads(c *gin.Context) {
@@ -230,9 +231,9 @@ func workloads(c *gin.Context) {
 		if h.Token == u.Token {
 			// Get curl data
 			workloadID := c.Request.FormValue("workload-id")
-			filter := c.request.FormValue("filter")
+			filter := c.Request.FormValue("filter")
 
-			workloadName := fmt.Sprintf("workload-" + createdWorkloads)
+			workloadName := fmt.Sprintf("workload-" + strconv.Atoi(createdWorkloads))
 			createdWorkloads = createdWorkloads + 1
 
 			wkloadsBuff := scheduler.Workload{
@@ -240,7 +241,8 @@ func workloads(c *gin.Context) {
 				Filter: filter,
 				WorkloadName: workloadName,
 				Status: "scheduling",
-				Address: "localhost:50051")
+				Address: "localhost:50051",
+			}
 
 			message := fmt.Sprintf("Workload %s created successfuly", workloadName)
 

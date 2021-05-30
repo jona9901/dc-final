@@ -33,8 +33,8 @@ message FilterRequest {
   string filter = 1;
   string DownloadUrl = 2;
   string UploadUrl = 3;
-  string ImageId = 4;
-  string WorkloadId = 5;
+  string ImageID = 4;
+  string WorkloadID = 5;
 }
 
 // The response message containing the greetings
@@ -42,6 +42,6 @@ message FilterReply {
   string filter = 1;
   string DownloadUrl = 2;
   string UploadUrl = 3;
-  string ImageId = 4;
-  string WorkloadId = 5;
+  string ImageID = 4;
+  string WorkloadID = 5;
 }

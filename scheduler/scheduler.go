@@ -15,7 +15,7 @@ const (
 )
 
 type Workload struct {
-	WorkloadId	string
+	WorkloadID	string
 	Filter		string
 	WorkloadName	string
 	Status		string
@@ -40,11 +40,11 @@ func schedule(job Job, workload Workload) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
-	r, err := c.ApplyFilter(ctx, &pb.FilterRequest{Name: job.RPCName})
+	r, err := c.ApplyFilter(ctx, &pb.FilterRequest{Filter: workload.Filter})
 	if err != nil {
 		log.Fatalf("could not greet: %v", err)
 	}
-	log.Printf("Scheduler: RPC respose from %s : %s", address, r.GetMessage())
+	log.Printf("Scheduler: RPC respose from %s : %s", address, r.GetWorkloadID())
 }
 
 func Start(jobs chan Job, workloads chan Workload) error {
