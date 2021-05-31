@@ -1,10 +1,10 @@
 package main
 
 import (
-	"fmt"
+	//"fmt"
 	"log"
-	"math/rand"
-	"time"
+	//"math/rand"
+//	"time"
 
 	"github.com/jona9901/dc-final/api"
 	"github.com/jona9901/dc-final/controller"
@@ -17,27 +17,37 @@ func main() {
     // Create all channels
 	jobs := make(chan scheduler.Job)
 	workloads := make(chan scheduler.Workload)
-    availableWorkers := make(chan []scheduler.Worker)
-    availableWorkloads := make(chan []scheduler.Workload)
+//    availableWorkers := make(chan []scheduler.Worker)
+//    availableWorkloads := make(chan []scheduler.Workload)
 
 	// API
+//    newJob := make(chan scheduler.Job)
 	go api.Start(workloads)
 
 	// Start Controller
-	go controller.Start(availableWorkers, availableWorkloads)
+	go controller.Start()//availableWorkers, availableWorkloads)
 
 	// Start Scheduler
-	go scheduler.Start(jobs, workloads, availableWorkers)
+	go scheduler.Start(workloads)//, availableWorkers)
 	// Send sample jobs
-	sampleJob := scheduler.Job{Address: "localhost:50051", RPCName: "hello"}
+	//sampleJob := scheduler.Job{Address: "localhost:50051", RPCName: "hello"}
 
+ //   nJob := scheduler.Job{}
+    for {
+  /*      nJob = <-jobs
+        newJob <-nJob*/
+    }
+    /*
 	for {
 		sampleJob.RPCName = fmt.Sprintf("hello-%v", rand.Intn(10000))
 		jobs <- sampleJob
 		time.Sleep(time.Second * 5)
 	}
+    */
     close(jobs)
     close(workloads)
+    /*
     close(availableWorkers)
     close(availableWorkloads)
+    */
 }

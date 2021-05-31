@@ -31,6 +31,7 @@ var defaultUser = User {
 
 // Channel creation
 var wkloadsQ = make(chan scheduler.Workload)
+//var jobsQ = make(chan scheduler.Job)
 
 // new user recives the username and the password and returns a user struct
 func newUser(username string, password string) *User{
@@ -264,11 +265,69 @@ func workloads(c *gin.Context) {
 	})
 }
 
+func images(c *gin.Context) {
+	h := tokenHeader{}
+
+	if err := c.ShouldBindHeader(&h); err != nil {
+		c.JSON(700, err)						// err 700 -> header error
+	}
+
+	for _, u := range loggedUsers {
+		if h.Token == u.Token {
+            file, header, err := c.Request.FormFile("data")
+            fileName := header.Filename
+            fmt.Println(header.Filename)
+            out, err := os.Create("./tmp/" + fileName)
+            if err != nil {
+                c.JSON(200, gin.H {
+                    "message": err,
+                })
+                return
+            }
+
+            defer out.Close()
+            _, err = io.Copy(out, file)
+            if err != nil {
+                c.JSON(201, gin.H {
+                    "message": err,
+                })
+                return
+            }
+
+            wkloadBuff := <-wkloadsQ
+
+            newJob := scheduler.Workload {
+				WorkloadID: wkloadBuff.WorkloadID,
+				Filter: wkloadBuff.Filter,
+				WorkloadName: wkloadBuff.WorkloadName,
+				Status: "Working",
+                WorkerAddress: "localhost:50051",
+                ImageID: fmt.Sprintf("./tmp/", fileName),
+            }
+
+            wkloadsQ <-newJob
+
+            message := "File uploaded correctly"
+			c.JSON(200, gin.H {
+				"message": message,
+				"time": time.Now().Format("2006-Jan-02 15:04:05"),//("2015-03-07 11:06:39"),
+			})
+			return
+		}
+	}
+
+	c.JSON(500, gin.H {					// err 500 -> bad token
+		"message": "Error, not logged in",
+	})
+}
+
 // main function
-func Start(wkloads chan scheduler.Workload) {
+func Start(wkloads chan scheduler.Workload) {//jobs chan scheduler.Job, wkloads chan scheduler.Workload) {
 	fmt.Printf("Starting server at port 8080\n")
 
 	wkloadsQ = wkloads
+//    jobsQ = jobs
+
 	server := gin.Default()
 
 	server.GET("/login", login)
@@ -278,6 +337,7 @@ func Start(wkloads chan scheduler.Workload) {
 	server.MaxMultipartMemory = 8 << 20			// 8 MiB
 	server.POST("/upload", upload)
 	server.POST("/workloads", workloads)
+    server.POST("/images", images)
 
 	server.Run()
 }

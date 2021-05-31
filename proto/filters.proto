@@ -38,9 +38,7 @@ message FilterRequest {
 
 // The response message containing the greetings
 message FilterReply {
-  string Filter = 1;
-  string ImageID = 2;
-  string WorkloadID = 3;
+  string Message = 1;
 }
 
 // The request message containing the .

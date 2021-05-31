@@ -16,6 +16,10 @@ import (
 	"go.nanomsg.org/mangos/protocol/req"
 	"google.golang.org/grpc"
 
+    "github.com/anthonynsimon/bild/effect"
+    "github.com/anthonynsimon/bild/imgio"
+//"github.com/anthonynsimon/bild/blur"
+
 	// register transports
 	_ "go.nanomsg.org/mangos/transport/all"
 )
@@ -46,7 +50,17 @@ func die(format string, v ...interface{}) {
 // SayHello implements helloworld.GreeterServer
 func (s *server) ApplyFilter(ctx context.Context, in *pb.FilterRequest) (*pb.FilterReply, error) {
 	log.Printf("RPC: Received: %v", in.GetFilter())
-	return &pb.FilterReply{WorkloadID: "WorkloadID:  " + in.GetFilter()}, nil
+    output := fmt.Sprintf("./imagesOut/", in.WorkloadID)
+    output = fmt.Sprintf(output, "/")
+    output = fmt.Sprintf(output, in.ImageID)
+    fmt.Printf(output)
+    if in.GetFilter() == "grayscale" {
+        Grayscale(in.ImageID, output)
+    }
+    if in.GetFilter() == "blur" {
+        Blur(in.ImageID, output)
+    }
+	return &pb.FilterReply{Message: "Filter:  " + in.GetFilter() + " applied"}, nil
 }
 
 // CreateWorkload implements filters.CreateWorkload
@@ -63,6 +77,32 @@ func (s *server) CreateWorkload(ctx context.Context, in *pb.WorkloadRequest) (*p
 //    newWkld <-workloadBuff
     client(workloadBuff)
 	return &pb.WorkloadReply{Message: "Workload:  " + in.GetWorkloadName() + " scheduled."}, nil
+}
+
+func Grayscale(filename string, output string) {
+    img, err := imgio.Open(filename)
+    if err != nil {
+        die("Image processing error: %s", err)
+    }
+    grayscale := effect.Grayscale(img)
+
+    if err := imgio.Save(output, grayscale, imgio.PNGEncoder()); err != nil {
+        log.Printf("Filter successfully applied")
+        return
+    }
+}
+
+func Blur(filename string, output string) {
+    img, err := imgio.Open(filename)
+    if err != nil {
+        die("Image processing error: %s", err)
+    }
+    grayscale := effect.Grayscale(img)
+
+    if err := imgio.Save(output, grayscale, imgio.PNGEncoder()); err != nil {
+        log.Printf("Filter successfully applied")
+        return
+    }
 }
 
 func init() {

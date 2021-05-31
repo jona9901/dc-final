@@ -64,7 +64,7 @@ func server() {
 }
 */
 
-func socketServer(avlbWorkers chan []scheduler.Worker, avlbWorkloadList chan []scheduler.Workload) {
+func socketServer() {//avlbWorkers chan []scheduler.Worker, avlbWorkloadList chan []scheduler.Workload) {
     var sock mangos.Socket
     var err error
     var msg []byte
@@ -84,8 +84,31 @@ func socketServer(avlbWorkers chan []scheduler.Worker, avlbWorkloadList chan []s
         if err != nil {
             die("Cannot receive on rep socket: %s", err.Error())
         }
-        log.Printf("Message: %s", string(msg))
-
+        //log.Printf("Message: %s", string(msg))
+        if strings.Contains(string(msg), "WorkerName") {
+            newWorker := scheduler.Worker{}
+            json.Unmarshal(msg, &newWorker)
+            log.Printf("Worker created: %s", newWorker.WorkerName)
+            availableWorkers = append(availableWorkers, newWorker)
+            d := date()
+            log.Printf("Controller: worker created at date: %s\n", d)
+            if err = sock.Send([]byte(d)); err != nil {
+                die("Failed sublishing: %s", err.Error())
+            }
+        }
+        if strings.Contains(string(msg), "WorkloadID") {
+            newWorkload := scheduler.Workload{}
+            json.Unmarshal(msg, &newWorkload)
+            availableWorkloads = append(availableWorkloads, newWorkload)
+            log.Printf("New workload created: %s", newWorkload.WorkloadID)
+            d := date()
+            log.Printf("Controller: workload created at date: %s\n", d)
+            if err = sock.Send([]byte(d)); err != nil {
+                die("Failed sublishing: %s", err.Error())
+            }
+        }
+    }
+        /*
         if strings.Contains(string(msg), "WorkerName") {
             newWorker := scheduler.Worker{}
             json.Unmarshal(msg, &newWorker)
@@ -106,13 +129,15 @@ func socketServer(avlbWorkers chan []scheduler.Worker, avlbWorkloadList chan []s
 		if err = sock.Send([]byte(d)); err != nil {
 			die("Failed sublishing: %s", err.Error())
 		}
-    }
+        */
+    //}
 }
 
-func Start(avlbWorkerList chan []scheduler.Worker, avlbWorkloadList chan []scheduler.Workload) {
+func Start() {//avlbWorkerList chan []scheduler.Worker, avlbWorkloadList chan []scheduler.Workload) {
     log.Printf("Controller running")
     //go run server()
-    go socketServer(avlbWorkerList, avlbWorkloadList)
+//    go socketServer(avlbWorkerList, avlbWorkloadList)
+    go socketServer()
 //    getWorker(avlbWorkerList)
     //go run client()
     /*
