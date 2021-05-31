@@ -15,13 +15,11 @@ const (
 )
 
 type Workload struct {
-	WorkloadID	string
-	Filter		string
+	WorkloadID	    string
+	Filter		    string
 	WorkloadName	string
-	Status		string
-	ImageId		string
-	RunningJobs	int
-	filtered_images	[50] string
+	Status		    string
+	RunningJobs	    int
 }
 
 type Job struct {
@@ -46,7 +44,7 @@ func schedule(job Job, workload Workload) {
         Filter: workload.Filter,
         WorkloadName: workload.WorkloadName,
         Status: workload.Status,
-        Running_jobs: uint64(RunningJobs),
+        RunningJobs: uint64(workload.RunningJobs),
     })
 	if err != nil {
 		log.Fatalf("could not greet: %v", err)

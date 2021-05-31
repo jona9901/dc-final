@@ -7,10 +7,13 @@ import (
 	"log"
 	"net"
 	"os"
+    "encoding/json"
 
 	pb "github.com/jona9901/dc-final/proto"
+	"github.com/jona9901/dc-final/scheduler"
+	"github.com/jona9901/dc-final/controller"
 	"go.nanomsg.org/mangos"
-	"go.nanomsg.org/mangos/protocol/sub"
+	"go.nanomsg.org/mangos/protocol/req"
 	"google.golang.org/grpc"
 
 	// register transports
@@ -32,6 +35,9 @@ var (
 	tags              = ""
 )
 
+// Create channel to tell the controller a new woekload has been created
+//var newWkld = make(chan scheduler.Workload)
+
 func die(format string, v ...interface{}) {
 	fmt.Fprintln(os.Stderr, fmt.Sprintf(format, v...))
 	os.Exit(1)
@@ -46,6 +52,16 @@ func (s *server) ApplyFilter(ctx context.Context, in *pb.FilterRequest) (*pb.Fil
 // CreateWorkload implements filters.CreateWorkload
 func (s *server) CreateWorkload(ctx context.Context, in *pb.WorkloadRequest) (*pb.WorkloadReply, error) {
 	log.Printf("RPC: Creating workload with ID: %v", in.GetWorkloadID())
+    log.Printf("Creating workload")
+    workloadBuff := scheduler.Workload {
+        WorkloadID: in.WorkloadID,
+        Filter: in.Filter,
+        WorkloadName: in.WorkloadName,
+        Status: in.Status,
+        RunningJobs: int(in.RunningJobs),
+    }
+//    newWkld <-workloadBuff
+    client(workloadBuff)
 	return &pb.WorkloadReply{Message: "Workload:  " + in.GetWorkloadName() + " scheduled."}, nil
 }
 
@@ -56,30 +72,95 @@ func init() {
 }
 
 // joinCluster is meant to join the controller message-passing server
-func joinCluster() {
+/*
+func joinCluster(newWorkload chan scheduler.Workload) {
 	var sock mangos.Socket
 	var err error
-	var msg []byte
+//	var msg []byte
 
-	if sock, err = sub.NewSocket(); err != nil {
-		die("can't get new sub socket: %s", err.Error())
+	if sock, err = pub.NewSocket(); err != nil {
+		die("can't get new pub socket: %s", err.Error())
 	}
 
 	log.Printf("Connecting to controller on: %s", controllerAddress)
 	if err = sock.Dial(controllerAddress); err != nil {
-		die("can't dial on sub socket: %s", err.Error())
+		die("can't dial on pub socket: %s", err.Error())
 	}
+/ *
 	// Empty byte array effectively subscribes to everything
 	err = sock.SetOption(mangos.OptionSubscribe, []byte(""))
 	if err != nil {
 		die("cannot subscribe: %s", err.Error())
-	}
+	}* /
 	for {
-		if msg, err = sock.Recv(); err != nil {
+		if err = sock.Send([]byte("hola desde worker")); err != nil {
 			die("Cannot recv: %s", err.Error())
 		}
-		log.Printf("Message-Passing: Worker(%s): Received %s\n", workerName, string(msg))
+        / *if nWorkload scheduler.Workload := <-newWorkload
+		if err = sock.Send([]byte(nWorkload)); err != nil {
+			die("Failed publishing: %s", err.Error())
+		}* /
 	}
+}
+*/
+
+func registerWorker() {
+    var sock mangos.Socket
+    var err error
+    var msg []byte
+
+    worker := controller.availableWorkers {
+        WorkerName: workerName,
+        Tags: tags,
+    }
+
+    workerBuff, err := json.Marshal(worker)
+    if err != nil {
+        die("Json error: %s", err.Error())
+    }
+
+	if sock, err = req.NewSocket(); err != nil {
+		die("can't get new req socket: %s", err.Error())
+	}
+	if err = sock.Dial(controllerAddress); err != nil {
+		die("can't dial on req socket: %s", err.Error())
+	}
+	log.Printf("Worker sending registering info")
+	if err = sock.Send(workerBuff); err != nil {
+		die("can't send message on push socket: %s", err.Error())
+	}
+	if msg, err = sock.Recv(); err != nil {
+		die("can't receive date: %s", err.Error())
+	}
+    log.Printf("Message recieved from controller: %s", string(msg))
+}
+
+func client(newWorkload scheduler.Workload) {
+	var sock mangos.Socket
+	var err error
+	var msg []byte
+
+//    wkldbuff := <-newWorkload
+    workloadJson, err := json.Marshal(newWorkload)
+
+    if err != nil {
+        die("Json error: %s", err.Error())
+    }
+
+	if sock, err = req.NewSocket(); err != nil {
+		die("can't get new req socket: %s", err.Error())
+	}
+	if err = sock.Dial(controllerAddress); err != nil {
+		die("can't dial on req socket: %s", err.Error())
+	}
+	log.Printf("Worker sending workload info")
+	if err = sock.Send(workloadJson); err != nil {
+		die("can't send message on push socket: %s", err.Error())
+	}
+	if msg, err = sock.Recv(); err != nil {
+		die("can't receive date: %s", err.Error())
+	}
+    log.Printf("Message recieved from controller: %s", string(msg))
 }
 
 func getAvailablePort() int {
@@ -98,9 +179,13 @@ func getAvailablePort() int {
 
 func main() {
 	flag.Parse()
+    registerWorker()
 
 	// Subscribe to Controller
-	go joinCluster()
+//    newWorkload := make(chan scheduler.Workload)
+	//go joinCluster(newWorkload)
+//    go client(newWorkload)
+    //go client()
 
 	// Setup Worker RPC Server
 	rpcPort := getAvailablePort()
@@ -114,4 +199,8 @@ func main() {
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
+//    wkBuff := <-newWkld
+//    newWorkload <-wkBuff
+    // Close channels
+    //close(newWkld)
 }

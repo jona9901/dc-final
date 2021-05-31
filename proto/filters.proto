@@ -49,8 +49,7 @@ message WorkloadRequest {
   string Filter = 2;
   string WorkloadName = 3;
   string Status = 4;
-  uint64 Running_jobs = 5;
-  repeated string FilteredImages = 6;
+  uint64 RunningJobs = 5;
 }
 
 // The response message containing the greetings
