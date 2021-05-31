@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"time"
+	"math/rand"
 
 	pb "github.com/jona9901/dc-final/proto"
 	"google.golang.org/grpc"
@@ -20,6 +21,7 @@ type Workload struct {
 	WorkloadName	string
 	Status		    string
 	RunningJobs	    int
+    FilteredImages  []string
 }
 
 type Job struct {
@@ -27,7 +29,14 @@ type Job struct {
 	RPCName string
 }
 
-func schedule(job Job, workload Workload) {
+type Worker struct {
+    WorkerName      string
+    WorkerPort      int
+    Tags            []string
+}
+
+
+func schedule(job Job, workload Workload, worker Worker) {
 	// Set up a connection to the server.
 	conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
@@ -53,11 +62,14 @@ func schedule(job Job, workload Workload) {
 	log.Printf("Scheduler: RPC respose from %s : %s", address, r.GetMessage())
 }
 
-func Start(jobs chan Job, workloads chan Workload) error {
+func Start(jobs chan Job, workloads chan Workload, availableWorkers chan []Worker) error {
 	for {
 		job := <-jobs
 		workload := <-workloads
-		schedule(job, workload)
+        workers := <-availableWorkers
+        rand.Seed(time.Now().Unix())
+        worker := workers[rand.Intn(len(workers))]
+		schedule(job, workload, worker)
 	}
 	return nil
 }

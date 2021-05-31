@@ -14,16 +14,20 @@ import (
 func main() {
 	log.Println("Welcome to the Distributed and Parallel Image Processing System")
 
-	// API
+    // Create all channels
 	jobs := make(chan scheduler.Job)
 	workloads := make(chan scheduler.Workload)
+    availableWorkers := make(chan []scheduler.Worker)
+    availableWorkloads := make(chan []scheduler.Workload)
+
+	// API
 	go api.Start(workloads)
 
 	// Start Controller
-	go controller.Start()
+	go controller.Start(availableWorkers, availableWorkloads)
 
 	// Start Scheduler
-	go scheduler.Start(jobs, workloads)
+	go scheduler.Start(jobs, workloads, availableWorkers)
 	// Send sample jobs
 	sampleJob := scheduler.Job{Address: "localhost:50051", RPCName: "hello"}
 
@@ -32,4 +36,8 @@ func main() {
 		jobs <- sampleJob
 		time.Sleep(time.Second * 5)
 	}
+    close(jobs)
+    close(workloads)
+    close(availableWorkers)
+    close(availableWorkloads)
 }

@@ -5,6 +5,10 @@ import (
 	"log"
 	"os"
 	"time"
+    "encoding/json"
+    "strings"
+
+    "github.com/jona9901/dc-final/scheduler"
 
 	"go.nanomsg.org/mangos"
 	"go.nanomsg.org/mangos/protocol/rep"
@@ -25,10 +29,8 @@ func date() string {
 	return time.Now().Format(time.ANSIC)
 }
 
-type availableWorkers struct {
-    WorkerName      string
-    Tags            []string
-}
+var availableWorkers = []scheduler.Worker{}
+var availableWorkloads = []scheduler.Workload{}
 
 /*
 func server() {
@@ -62,7 +64,7 @@ func server() {
 }
 */
 
-func sockCreateWorkload() {
+func socketServer(avlbWorkers chan []scheduler.Worker, avlbWorkloadList chan []scheduler.Workload) {
     var sock mangos.Socket
     var err error
     var msg []byte
@@ -84,6 +86,21 @@ func sockCreateWorkload() {
         }
         log.Printf("Message: %s", string(msg))
 
+        if strings.Contains(string(msg), "WorkerName") {
+            newWorker := scheduler.Worker{}
+            json.Unmarshal(msg, &newWorker)
+            log.Printf(newWorker.WorkerName)
+            availableWorkers = append(availableWorkers, newWorker)
+            avlbWorkers <-availableWorkers
+        }
+        if strings.Contains(string(msg), "WorkloadID") {
+            newWorkload := scheduler.Workload{}
+            json.Unmarshal(msg, &newWorkload)
+            availableWorkloads = append(availableWorkloads, newWorkload)
+            avlbWorkloadList <-availableWorkloads
+            log.Printf("New workload created: %s", newWorkload.WorkloadID)
+        }
+
 		d := date()
         log.Printf("Controller: responding to worker at date: %s\n", d)
 		if err = sock.Send([]byte(d)); err != nil {
@@ -92,10 +109,11 @@ func sockCreateWorkload() {
     }
 }
 
-func Start() {
+func Start(avlbWorkerList chan []scheduler.Worker, avlbWorkloadList chan []scheduler.Workload) {
     log.Printf("Controller running")
     //go run server()
-    go sockCreateWorkload()
+    go socketServer(avlbWorkerList, avlbWorkloadList)
+//    getWorker(avlbWorkerList)
     //go run client()
     /*
 	var sock mangos.Socket

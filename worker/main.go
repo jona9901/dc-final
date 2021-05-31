@@ -7,11 +7,11 @@ import (
 	"log"
 	"net"
 	"os"
+    "strings"
     "encoding/json"
 
 	pb "github.com/jona9901/dc-final/proto"
 	"github.com/jona9901/dc-final/scheduler"
-	"github.com/jona9901/dc-final/controller"
 	"go.nanomsg.org/mangos"
 	"go.nanomsg.org/mangos/protocol/req"
 	"google.golang.org/grpc"
@@ -104,14 +104,15 @@ func joinCluster(newWorkload chan scheduler.Workload) {
 }
 */
 
-func registerWorker() {
+func registerWorker(rpcPort int) {
     var sock mangos.Socket
     var err error
     var msg []byte
 
-    worker := controller.availableWorkers {
+    worker := scheduler.Worker {
         WorkerName: workerName,
-        Tags: tags,
+        Tags: strings.Split(tags, ","),
+        WorkerPort: rpcPort,
     }
 
     workerBuff, err := json.Marshal(worker)
@@ -179,7 +180,6 @@ func getAvailablePort() int {
 
 func main() {
 	flag.Parse()
-    registerWorker()
 
 	// Subscribe to Controller
 //    newWorkload := make(chan scheduler.Workload)
@@ -189,6 +189,7 @@ func main() {
 
 	// Setup Worker RPC Server
 	rpcPort := getAvailablePort()
+    registerWorker(rpcPort)
 	log.Printf("Starting RPC Service on localhost:%v", rpcPort)
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%v", rpcPort))
 	if err != nil {
